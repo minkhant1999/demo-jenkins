@@ -1,12 +1,6 @@
-// Auto-deploy to Firebase: runs on every push (poll or webhook) using Docker
+// Auto-deploy to Firebase: runs on every push (poll or webhook). Uses Node on Jenkins agent.
 pipeline {
-    agent {
-        docker {
-            image 'node:20-alpine'
-            args '-u root'
-            reuseNode true
-        }
-    }
+    agent any
 
     triggers {
         // Auto-deploy: poll repo every 2 min; or use GitHub webhook for instant deploy on push
