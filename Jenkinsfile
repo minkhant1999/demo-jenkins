@@ -8,7 +8,7 @@ pipeline {
 
     // Use NodeJS installed by Jenkins plugin
     tools {
-        nodejs 'Node20'
+        nodejs 'NodeJS'
     }
 
     environment {
