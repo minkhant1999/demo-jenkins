@@ -1,14 +1,16 @@
+// Auto-deploy to Firebase: runs on every push (poll or webhook) using Docker
 pipeline {
-    agent any
-
-    // Poll SCM every minute
-    triggers {
-        pollSCM('* * * * *')
+    agent {
+        docker {
+            image 'node:20-alpine'
+            args '-u root'
+            reuseNode true
+        }
     }
 
-    // Use NodeJS installed by Jenkins plugin
-    tools {
-        nodejs 'NodeJS'
+    triggers {
+        // Auto-deploy: poll repo every 2 min; or use GitHub webhook for instant deploy on push
+        pollSCM('H/2 * * * *')
     }
 
     environment {
@@ -16,44 +18,39 @@ pipeline {
     }
 
     stages {
-
-        stage('Checkout') { //Jenkins will checkout the code from the repository to the workspace
+        stage('Checkout') {
             steps {
                 checkout scm
             }
         }
 
-        stage('Install Dependencies') { //Jenkins will install the dependencies for the project using node from tools  in the workspace read from package.json same as our local machine
+        stage('Install Dependencies') {
             steps {
-                echo 'Installing dependencies...'
-                sh 'node -v'
-                sh 'npm -v'
-                sh 'npm install'
+                sh 'node -v && npm -v'
+                sh 'npm ci'
                 sh 'npm install -g firebase-tools'
             }
         }
 
-        stage('Build Angular App') { //Jenkins will build the Angular app in the workspace same as our local machine
+        stage('Build Angular') {
             steps {
-                echo 'Building Angular app...'
                 sh 'npx ng build --configuration production'
             }
         }
 
-        stage('Deploy to Firebase') { //Jenkins will deploy the Angular app to Firebase Hosting as we have set up in the project
+        stage('Deploy to Firebase') {
             steps {
-                echo 'Deploying to Firebase Hosting...'
-                sh 'firebase deploy --token $FIREBASE_TOKEN'
+                sh 'firebase deploy --token $FIREBASE_TOKEN --non-interactive'
             }
         }
     }
 
     post {
         success {
-            echo '✅ Angular app deployed successfully to Firebase!'
+            echo '✅ Auto-deployed to Firebase Hosting.'
         }
         failure {
-            echo '❌ Build or deployment failed. Check logs.'
+            echo '❌ Build or deploy failed. Check logs.'
         }
     }
 }

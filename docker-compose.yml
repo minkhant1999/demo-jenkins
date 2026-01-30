@@ -1,0 +1,24 @@
+# Jenkins: auto-deploy to Firebase on push (Docker build runs in Node container)
+services:
+  jenkins:
+    build:
+      context: .
+      dockerfile: Dockerfile.jenkins
+    image: demo-jenkins:with-docker
+    container_name: demo_jenkins
+    privileged: true
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
+    group_add:
+      - "999"
+    restart: unless-stopped
+    # user: root  # uncomment on Mac if "Cannot connect to Docker"
+
+volumes:
+  jenkins_home: {}
