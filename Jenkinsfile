@@ -35,7 +35,8 @@ pipeline {
 
         stage('Deploy to Firebase') {
             steps {
-                sh 'firebase deploy --token $FIREBASE_TOKEN --non-interactive'
+                sh 'ls -la dist/demo-jenkins || true'
+                sh 'npx firebase deploy --token $FIREBASE_TOKEN --non-interactive'
             }
         }
     }
