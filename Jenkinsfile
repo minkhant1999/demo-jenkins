@@ -1,13 +1,8 @@
 pipeline {
     agent any
 
-    // Use NodeJS installed by Jenkins plugin
-    tools {
-        nodejs 'NodeJS'
-    }
-
     environment {
-        FIREBASE_TOKEN = credentials('FIREBASE_TOKEN')
+        FIREBASE_TOKEN = credentials('firebase_token')
     }
 
     stages {
@@ -18,37 +13,30 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Build Angular') {
             steps {
-                echo 'Installing dependencies...'
-                sh 'node -v'
-                sh 'npm -v'
-                sh 'npm install'
-                sh 'npm install -g firebase-tools'
-            }
-        }
-
-        stage('Build Angular App') {
-            steps {
-                echo 'Building Angular app...'
-                sh 'npx ng build --configuration production'
+                script {
+                    docker.image('node:18-alpine').inside {
+                        sh '''
+                          npm install
+                          npm run build
+                        '''
+                    }
+                }
             }
         }
 
         stage('Deploy to Firebase') {
             steps {
-                echo 'Deploying to Firebase Hosting...'
-                sh 'firebase deploy --token $FIREBASE_TOKEN'
+                script {
+                    docker.image('node:18-alpine').inside {
+                        sh '''
+                          npm install -g firebase-tools
+                          firebase deploy --only hosting --token "$FIREBASE_TOKEN"
+                        '''
+                    }
+                }
             }
-        }
-    }
-
-    post {
-        success {
-            echo '✅ Angular app deployed successfully to Firebase!'
-        }
-        failure {
-            echo '❌ Build or deployment failed. Check logs.'
         }
     }
 }
