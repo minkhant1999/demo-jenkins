@@ -9,6 +9,7 @@ pipeline {
 
     environment {
         FIREBASE_TOKEN = credentials('firebase-token')
+        PATH = "/usr/bin:${env.PATH}"
     }
 
     stages {
